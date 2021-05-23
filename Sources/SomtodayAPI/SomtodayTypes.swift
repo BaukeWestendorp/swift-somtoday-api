@@ -21,27 +21,27 @@ public struct LoginCredentials {
 	public let password: String
 }
 
-public struct Link: Decodable {
+public struct Link: Codable {
 	public let id: Int
 	public let rel: String
 	public let type: String
 	public let href: String?
 }
 
-public struct Permission: Decodable {
+public struct Permission: Codable {
 	public let full: String
 	public let type: String
 	public let operations: [String]
 	public let instances: [String]
 }
 
-public protocol AdditionalObjects: Decodable {
+public protocol AdditionalObjects: Codable {
 
 }
 
 // MARK: Schooljaar
 
-public struct Schooljaar: Decodable {
+public struct Schooljaar: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 
@@ -52,7 +52,7 @@ public struct Schooljaar: Decodable {
 }
 
 // MARK: Account
-public struct Account: Decodable {
+public struct Account: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 	public let additionalObjects: AccountAdditionalObjects
@@ -66,11 +66,11 @@ public struct AccountAdditionalObjects: AdditionalObjects {
 	public let restricties: Restricties?
 }
 
-public struct Restricties: Decodable {
+public struct Restricties: Codable {
 	public let items: [EloRestricties]
 }
 
-public struct EloRestricties: Decodable {
+public struct EloRestricties: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 	public let vestigingsId: Int
@@ -105,7 +105,7 @@ public struct EloRestricties: Decodable {
 	public let lesurenVerbergenSettingAan: Bool
 }
 
-public struct Persoon: Decodable {
+public struct Persoon: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 
@@ -116,11 +116,11 @@ public struct Persoon: Decodable {
 }
 
 // MARK: Pupil
-public struct Pupils: Decodable {
+public struct Pupils: Codable {
 	public let items: [Pupil]
 }
 
-public struct Pupil: Decodable {
+public struct Pupil: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 	public let additionalObjects: PupilAdditionalData
@@ -135,13 +135,13 @@ public struct Pupil: Decodable {
 	public let geslacht: String
 }
 
-public struct PupilAdditionalData: Decodable {
+public struct PupilAdditionalData: Codable {
 	public let huidigeLichting: Lichting
 	public let rVestiging: Vestiging
 	public let lestijden: Lestijden
 }
 
-public struct Lichting: Decodable {
+public struct Lichting: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 
@@ -150,7 +150,7 @@ public struct Lichting: Decodable {
 	public let onderwijssoort: OnderwijsSoort
 }
 
-public struct OnderwijsSoort: Decodable {
+public struct OnderwijsSoort: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 
@@ -158,7 +158,7 @@ public struct OnderwijsSoort: Decodable {
 	public let isOnderbouw: Bool
 }
 
-public struct LichtingSchooljaar: Decodable {
+public struct LichtingSchooljaar: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 
@@ -167,14 +167,14 @@ public struct LichtingSchooljaar: Decodable {
 	public let heeftExamendossier: Bool
 }
 
-public struct Vestiging: Decodable {
+public struct Vestiging: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 
 	public let naam: String
 }
 
-public struct Lestijden: Decodable {
+public struct Lestijden: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 
@@ -183,7 +183,7 @@ public struct Lestijden: Decodable {
 	public let lesuren: [Lesuur]
 }
 
-public struct Lesuur: Decodable {
+public struct Lesuur: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 
@@ -194,11 +194,11 @@ public struct Lesuur: Decodable {
 
 // MARK: Medewerkers
 
-public struct Medewerkers: Decodable {
+public struct Medewerkers: Codable {
 	public let items: [Medewerker]
 }
 
-public struct Medewerker: Decodable {
+public struct Medewerker: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 
@@ -214,18 +214,18 @@ public struct Medewerker: Decodable {
 
 // MARK: Afspraken
 
-public struct Afspraken: Decodable {
+public struct Afspraken: Codable {
 	public let items: [Afspraak]
 }
 
-public struct Afspraak: Decodable {
+public struct Afspraak: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 	public let additionalObjects: AfspraakAdditionalObjects
 
 	public let afspraakType: AfspraakType
-	public let beginDatumTijd: String
-	public let eindDatumTijd: String
+	public let beginDatumTijdRaw: String
+	public let eindDatumTijdRaw: String
 	public let titel: String
 	public let omschrijving: String
 	public let presentieRegistratieVerplicht: Bool
@@ -239,20 +239,49 @@ public struct Afspraak: Decodable {
 	public let eindLesuur: Int?
 
 	//	public let bijlagen: [] // TODO Unknown Type
+	
+	public var beginDatumTijd: Date? {
+		Util.fromDatumTijd(beginDatumTijdRaw)
+	}
+
+	public var eindDatumTijd: Date? {
+		Util.fromDatumTijd(eindDatumTijdRaw)
+	}
 }
 
-public struct AfspraakAdditionalObjects: Decodable {
+public extension Afspraak {
+	enum CodingKeys: String, CodingKey {
+		case links
+		case permissions
+		case additionalObjects
+		case afspraakType
+		case beginDatumTijdRaw = "beginDatumTijd"
+		case eindDatumTijdRaw = "eindDatumTijd"
+		case titel
+		case omschrijving
+		case presentieRegistratieVerplicht
+		case presentieRegistratieVerwerkt
+		case afspraakStatus
+		case vestiging
+		case locatie
+		case beginLesuur
+		case eindLesuur
+		// TODO Do these need to be included???
+	}
+}
+
+public struct AfspraakAdditionalObjects: Codable {
 	public let vak: Vak?
 	public let docentAfkortingen: String?
 	public let leerlingen: LeerlingPrimers?
 	//	public let onlineDeelnames: []?
 }
 
-public struct LeerlingPrimers: Decodable {
+public struct LeerlingPrimers: Codable {
 	public let items: [LeerlingPrimer]
 }
 
-public struct LeerlingPrimer: Decodable {
+public struct LeerlingPrimer: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 	public let UUID: String
@@ -261,14 +290,14 @@ public struct LeerlingPrimer: Decodable {
 	public let achternaam: String
 }
 
-public struct Vak: Decodable {
+public struct Vak: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 	public let afkorting: String
 	public let naam: String
 }
 
-public struct AfspraakType: Decodable {
+public struct AfspraakType: Codable {
 	public let links: [Link]
 	public let permissions: [Permission]
 
@@ -285,7 +314,7 @@ public struct AfspraakType: Decodable {
 
 // MARK: Authentication
 
-public struct AuthToken: Decodable {
+public struct AuthToken: Codable {
 	public let access_token: String
 	public let refresh_token: String
 	public let somtoday_api_url: String
@@ -298,11 +327,11 @@ public struct AuthToken: Decodable {
 
 // MARK: Organisations
 
-public struct Organisations: Decodable {
+public struct Organisations: Codable {
 	public let instellingen: [Organisation]
 }
 
-public struct Organisation: Decodable {
+public struct Organisation: Codable {
 	public let uuid: String
 	public let naam: String
 	public let plaats: String
@@ -316,7 +345,7 @@ public struct Organisation: Decodable {
 	}
 }
 
-public struct OIDCUrl: Decodable {
+public struct OIDCUrl: Codable {
 	public let omschrijving: String
 	public let url: String
 	public let domain_hint: String
